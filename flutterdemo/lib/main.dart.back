@@ -1,0 +1,63 @@
+
+
+import 'package:flutter/material.dart';
+
+void main(){
+  runApp(
+  //  Hello()
+  App()
+  );
+}
+class App extends StatelessWidget{
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return MaterialApp(
+      title:'Flutter',
+      // home:Hello()
+      home:Home(),
+      debugShowCheckedModeBanner: false,//去掉右上方bug标志
+    );
+  }
+}
+// 抽离Scaffold组件
+class Home extends StatelessWidget{
+  @override
+  Widget build(BuildContext context){
+
+    return Scaffold(
+        appBar:AppBar(
+          title:Text('Flutter'),
+          // 设置阴影
+          elevation: 10.0,
+          // 左边图标
+          leading:Icon(Icons.menu),
+          // 右边图标
+          actions:<Widget>[
+            Icon(Icons.search),
+            Icon(Icons.send),
+            Icon(Icons.usb)
+          ]
+        ),
+        body:Hello()
+      );
+  }
+}
+
+class Hello extends StatelessWidget{
+  // StatelessWidget是静态组件
+  build(BuildContext context){
+    return Center(
+      child:Text(
+        "你好 hhaha",
+        textDirection: TextDirection.ltr,
+        style:TextStyle(
+          color:Colors.blue,
+          fontSize: 30.0,
+          fontWeight: FontWeight.w600,
+          fontStyle: FontStyle.italic
+        )
+      )
+    );
+  }
+}
