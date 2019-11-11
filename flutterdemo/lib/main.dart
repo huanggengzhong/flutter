@@ -57,9 +57,9 @@ class MyApp extends StatelessWidget {
             new Image.network(
                 'https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2571762536.webp'),
             new Image.network(
-                'https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2571762536.webp'),
+                'https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2567998580.webp'),
             new Image.network(
-                'https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2571762536.webp'),
+                'https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2567998580.webp'),
             new Image.network(
                 'https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2567998580.webp'),
             new Image.network(
@@ -70,3 +70,4 @@ class MyApp extends StatelessWidget {
         )));
   }
 }
+
