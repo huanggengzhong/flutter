@@ -28,7 +28,7 @@ class _FormregistState extends State<Formregist> {
 
   String _verifyStr = '获取验证码';
   int _seconds = 0;
-  Timer _timer;
+  Timer _timer;//要引入异步包
 
   String username = '';
   String smsCode = '';

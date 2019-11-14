@@ -7,7 +7,7 @@ Dio dio = new Dio();
 
 class PubMoudle {
 
-  static httpRequest(method, url, [data]) async{
+  static httpRequest(method, url, [data]) async{//加入[]代表可传可不传
     SharedPreferences prefs = await SharedPreferences.getInstance();
     try{
       dio.options.headers['Authorization'] = prefs.getString('token')??'';
