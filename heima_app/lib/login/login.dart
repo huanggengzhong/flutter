@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 // import 'dart:io';//自带的请求需要用到的包
-import 'package:dio/dio.dart'; //第三方dio请求要用到的包
+// import 'package:dio/dio.dart'; //第三方dio接口请求要用到的包,已移除到pub.dart里
+import 'package:heima_app/moudle/pub.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:heima_app/home/home.dart';
 
 class LoginPage extends StatelessWidget {
   @override
@@ -31,13 +34,13 @@ class _FormregistState extends State<Formregist> {
 
   // 输入框值
 
-  String username='';
-  String smsCode='';
+  String username = '';
+  String smsCode = '';
 
   //定义一个获取验证码的方法
   _getSmsCode() async {
     //这样实现单次点击
-    if (_seconds == 0) {
+    if (_seconds == 0 && username != '') {
       // 这里执行:
       //一.倒计时方法;
       _startTimer();
@@ -57,21 +60,35 @@ class _FormregistState extends State<Formregist> {
       // print(response);
 
       // dio使用演示
-      void getHttp() async {
-        try {
-          Response response;
-          response = await Dio().get(//哎遇到一个巨大的坑,接口是get类型,偏偏官网提示是post请求
-            "https://api.apiopen.top/developerLogin",
-            data:{"name":'peakchao',"passwd":'123456'},
-            );
-          return print(response.data);//正确得到
-        } catch (e) {
-          return print(e);
+      // void getHttp() async {
+      //   try {
+      //     Response response;
+      //     response = await Dio().get(//哎遇到一个巨大的坑,接口是get类型,偏偏官网提示是post请求
+      //       "https://api.apiopen.top/developerLogin",
+      //       data:{"name":'peakchao',"passwd":'123456'},
+      //       );
+      //     return print(response.data);//正确得到
+      //   } catch (e) {
+      //     return print(e);
+      //   }
+      // }
+      // getHttp();
+
+      // 上面现在改为封装接口调用
+      PubMoudle.httpRequest('get', '/developerLogin',
+          {"name": 'peakchao', "passwd": '123456'}).then((res) {
+        // print(res.data);
+        if(res.data['code']==200){
+          Scaffold.of(context).showSnackBar(
+            SnackBar(content:Text("验证码已发送"))
+          );
+        }else{
+            Scaffold.of(context).showSnackBar(
+            SnackBar(content:Text("失败"))
+          );
         }
-      }
 
-      getHttp();
-
+      });
     }
   }
 
@@ -79,7 +96,7 @@ class _FormregistState extends State<Formregist> {
   _startTimer() {
     // print("定时器方法执行了");
     // _seconds = 60;
-    _seconds = 8; //方便测试,这里临时改为8秒
+    _seconds = 10; //方便测试,这里临时改为10秒
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       //periodic方法参数1是间隔多少时间执行
       //优化定时器增加0判断
@@ -102,6 +119,42 @@ class _FormregistState extends State<Formregist> {
   _cancelTimer() {
     _timer.cancel();
   }
+  //登录方法
+  _login() {
+    //登录接口调用
+       PubMoudle.httpRequest('get', '/developerLogin',
+          {"name": 'peakchao', "passwd": '123456'}).then((res) async{//遇到的坑,async要写在这里
+        // print(res.data);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if(res.data['code']==200){
+          Scaffold.of(context).showSnackBar(
+            SnackBar(content:Text("登录成功"))
+          );
+          //这里执行本地存储
+          // print(res.data['result']['apikey']);//再次遇到的坑,对象点语法是取不到对象里的对象的,要用数组字符串方法
+          await prefs.setString('token',res.data['result']['apikey']);
+          // print(prefs.getString('token'));//本地存储取值方法
+          // 跳转到首页,不需要左上角返回
+          // Navigator.push(context, MaterialPageRoute(//普通跳转
+          //   builder:(context)=>Home()
+          // ));
+
+          Navigator.pushNamed(context,'/home');//main主页配置路由
+          // Navigator.pushNamedAndRemoveUntil(context,'/home',(route)=>false);//不会有返回的跳转,因为测试环境,先不用
+        }else{
+            Scaffold.of(context).showSnackBar(
+            SnackBar(content:Text("失败"))
+          );
+        }
+
+      });
+  }
+ //在离开生命周期里清除定时器
+ @override
+ void dispose(){
+   super.dispose();
+   _cancelTimer();
+ }
 
   @override
   Widget build(BuildContext context) {
@@ -113,27 +166,26 @@ class _FormregistState extends State<Formregist> {
           padding: EdgeInsets.symmetric(
               horizontal: 10.0, vertical: 5.0), //对称方式填,horizontal是左右,另一个是上下
           child: TextField(
-            //输入框
-            keyboardType: TextInputType.phone, //键盘输入类型
-            decoration: InputDecoration(
-                //用于控制TextField的外观显示，如提示文本、背景颜色、边框等。
-                prefixIcon:
-                    Icon(Icons.mobile_screen_share, color: Colors.grey), //输入图标
-                focusedBorder: UnderlineInputBorder(
-                    //聚焦边框
-                    borderSide: BorderSide(color: Colors.black45)),
-                enabledBorder: UnderlineInputBorder(
-                    //无焦边框
-                    borderSide: BorderSide(color: Colors.black45)),
-                hintText: "请输入手机号码", //默认文本
-                hintStyle: TextStyle(color: Colors.black38, fontSize: 14.0)),
-                onChanged:(value){
-                  // print(value);
-                  setState((){
-                    username=value;
-                  });
-                }
-          ),
+              //输入框
+              keyboardType: TextInputType.phone, //键盘输入类型
+              decoration: InputDecoration(
+                  //用于控制TextField的外观显示，如提示文本、背景颜色、边框等。
+                  prefixIcon: Icon(Icons.mobile_screen_share,
+                      color: Colors.grey), //输入图标
+                  focusedBorder: UnderlineInputBorder(
+                      //聚焦边框
+                      borderSide: BorderSide(color: Colors.black45)),
+                  enabledBorder: UnderlineInputBorder(
+                      //无焦边框
+                      borderSide: BorderSide(color: Colors.black45)),
+                  hintText: "请输入手机号码", //默认文本
+                  hintStyle: TextStyle(color: Colors.black38, fontSize: 14.0)),
+              onChanged: (value) {
+                // print(value);
+                setState(() {
+                  username = value;
+                });
+              }),
         ),
         Container(
             color: Colors.white,
@@ -146,28 +198,27 @@ class _FormregistState extends State<Formregist> {
                         horizontal: 10.0,
                         vertical: 5.0), //对称方式填,horizontal是左右,另一个是上下
                     child: TextField(
-                      //输入框
-                      keyboardType: TextInputType.phone, //键盘输入类型
-                      decoration: InputDecoration(
-                          //用于控制TextField的外观显示，如提示文本、背景颜色、边框等。
-                          prefixIcon:
-                              Icon(Icons.lock, color: Colors.grey), //输入图标
-                          focusedBorder: UnderlineInputBorder(
-                              //聚焦边框
-                              borderSide: BorderSide.none),
-                          enabledBorder: UnderlineInputBorder(
-                              //无焦边框
-                              borderSide: BorderSide.none),
-                          hintText: "请输入验证码", //默认文本
-                          hintStyle:
-                              TextStyle(color: Colors.black38, fontSize: 14.0)),
-                              onChanged:(value){
-                                // print(value);
-                                setState((){
-                                  smsCode=value;
-                                });
-                              }
-                    ),
+                        //输入框
+                        keyboardType: TextInputType.phone, //键盘输入类型
+                        decoration: InputDecoration(
+                            //用于控制TextField的外观显示，如提示文本、背景颜色、边框等。
+                            prefixIcon:
+                                Icon(Icons.lock, color: Colors.grey), //输入图标
+                            focusedBorder: UnderlineInputBorder(
+                                //聚焦边框
+                                borderSide: BorderSide.none),
+                            enabledBorder: UnderlineInputBorder(
+                                //无焦边框
+                                borderSide: BorderSide.none),
+                            hintText: "请输入验证码", //默认文本
+                            hintStyle: TextStyle(
+                                color: Colors.black38, fontSize: 14.0)),
+                        onChanged: (value) {
+                          print(value); //输入框的值
+                          setState(() {
+                            smsCode = value;
+                          });
+                        }),
                   ),
                 ),
                 GestureDetector(
@@ -209,13 +260,16 @@ class _FormregistState extends State<Formregist> {
               '登录',
               style: TextStyle(color: Colors.white),
             ),
-            onPressed:username==''&& smsCode==''? null:(){//null是不可点击
-              // 有值后这里发起请求
-              print("可以发起请求啦");
-
-            },
+            onPressed: username == '' && smsCode == ''
+                ? null
+                : () {
+                    //null是不可点击
+                    // 有值后这里发起请求
+                    print("发起请求啦");
+                    _login();
+                  },
             color: Colors.blue,
-            disabledColor: Colors.blue[200],//不可点击的颜色
+            disabledColor: Colors.blue[200], //不可点击的颜色
             elevation: 0.0, //去除下边框
           ),
         )
